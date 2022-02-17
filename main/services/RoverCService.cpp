@@ -44,19 +44,11 @@ namespace Services {
             return result;
         });
 
-
         On("rover.moveatangle", [&](const Services::ParametersPack& parameters) {
             Result<std::string> result;
             result = MoveAtAngle(parameters.GetParameter<int32_t>("angle"), parameters.GetParameter<int32_t>("speed"));
             return result;
         });
-
-        On("rover.rotateandmove", [&](const Services::ParametersPack& parameters) {
-            Result<std::string> result;
-            result = RotateAndMove(parameters.GetParameter<int32_t>("angle"), parameters.GetParameter<int32_t>("speed"));
-            return result;
-        });
-        
 
         On("rover.follow", [&](const Services::ParametersPack& parameters) {
             Result<std::string> result = Follow(parameters.GetParameter<std::string>("master"));
@@ -82,25 +74,20 @@ namespace Services {
     }
 
 
-    Result<std::string> RoverCService::Send_Motors_iic(const std::valarray<double>& motors_values) {
+    Result<std::string> RoverCService::Send_Motors_iic(const std::valarray<int32_t>& motors_values) {
         Result<std::string> result;
-        Send_iic(0x00, static_cast<unsigned int>(motors_values[0]));
-        Send_iic(0x01, static_cast<unsigned int>(motors_values[1]));
-        Send_iic(0x02, static_cast<unsigned int>(motors_values[2]));
-        Send_iic(0x03, static_cast<unsigned int>(motors_values[3]));
+        Wire.beginTransmission(ROVER_ADDRESS);
+        Wire.write(0x00);
+        Wire.write(ModerateSpeed(motors_values[0]));
+        Wire.write(ModerateSpeed(motors_values[1]));
+        Wire.write(ModerateSpeed(motors_values[2]));
+        Wire.write(ModerateSpeed(motors_values[3]));
+        Wire.endTransmission();
         return result;
     }
 
     int32_t RoverCService::ModerateSpeed(const int32_t& speed) {
-        int32_t result = Clamp(speed, 0, 100);
-        return result;
-    }
-
-    double RoverCService::ModerateAngle(const double& angle) {
-        double result = Clamp(angle, -180.0, 180.0);
-        /*if(result < 0) {
-            result = 360 - std::abs(result);
-        }*/
+        int32_t result = Clamp(speed, -100, 100);
         return result;
     }
 
@@ -108,132 +95,58 @@ namespace Services {
         Result<std::string> result;
         
         const int32_t moderatedSpeed = ModerateSpeed(speed);
-        const int32_t moderatedAngle = ModerateAngle(angle);
 
-        double x = moderatedSpeed*std::sin(moderatedAngle*M_PI/180);
-        double y = moderatedSpeed*std::cos(moderatedAngle*M_PI/180);
-
-        SpeedCoefficients speedCoefficients;
+        int32_t x = std::round(moderatedSpeed*std::sin((angle*M_PI)/180));
+        int32_t y = std::round(moderatedSpeed*std::cos((angle*M_PI)/180));
         
-        Serial.printf("MoveAtAngle(%d, %d)\n",moderatedAngle ,moderatedSpeed);
-        Serial.printf("x,y(%f, %f)\n",x ,y);
+        Serial.printf("MoveAtAngle(%d, %d)\n",angle ,moderatedSpeed);
+        Serial.printf("x,y(%d, %d)\n",x ,y);
 
-        if(x >= 0) { // right
-            speedCoefficients.right = std::abs(x)*(1.0/moderatedSpeed);
-        }
-        else { //left
-            speedCoefficients.left = std::abs(x)*(1.0/moderatedSpeed);
-        }
-
-        if(y >= 0) { // forward
-            speedCoefficients.forward = std::abs(y)*(1.0/moderatedSpeed);
-        }
-        else { //backward
-            speedCoefficients.backward = std::abs(y)*(1.0/moderatedSpeed);
-        }
-
-        Serial.printf("speedCoefficients: %f, %f, %f, %f \n", speedCoefficients.forward, speedCoefficients.backward, speedCoefficients.left, speedCoefficients.right);
-        auto appliedCoefficients = speedCoefficients.GetCoefficientsVector(moderatedSpeed);
+        std::valarray<int32_t> motorsSpeed = {y+x, y-x, y-x, y+x};
         
-        Serial.printf("appliedCoefficients: %f, %f, %f, %f \n", appliedCoefficients[0], appliedCoefficients[1], appliedCoefficients[2], appliedCoefficients[3]);
-        result = Send_Motors_iic(appliedCoefficients);
-        return result;
-    };
-
-
-    Result<std::string> RoverCService::RotateAndMove(const int32_t& angle, const int32_t& speed) {
-        Result<std::string> result;
-        
-        const int32_t moderatedSpeed = ModerateSpeed(speed);
-        const int32_t moderatedAngle = ModerateAngle(angle);
-
-        SpeedCoefficients speedCoefficients;
-        
-        Serial.printf("MoveAtAngle(%d, %d)\n",moderatedAngle ,moderatedSpeed);
-
-        if(moderatedAngle >= 0) { // rotate right
-            speedCoefficients.rotate_right = moderatedSpeed/100;
-        }
-        else { // rotate left
-            speedCoefficients.rotate_left = moderatedSpeed/100;
-        }
-
-        Serial.printf("speedCoefficients: %f, %f, %f, %f \n", speedCoefficients.forward, speedCoefficients.backward, speedCoefficients.left, speedCoefficients.right);
-        auto appliedCoefficients = speedCoefficients.GetCoefficientsVector(moderatedSpeed);
-        Serial.printf("appliedCoefficients: %f, %f, %f, %f \n", appliedCoefficients[0], appliedCoefficients[1], appliedCoefficients[2], appliedCoefficients[3]);
-        Send_Motors_iic(appliedCoefficients);
-        delay(1000);
-        Forward(moderatedSpeed);
-        delay(1000);
+        Serial.printf("motorsSpeed: %d, %d, %d, %d \n", motorsSpeed[0], motorsSpeed[1], motorsSpeed[2], motorsSpeed[3]);
+        result = Send_Motors_iic(motorsSpeed);
         return result;
     };
 
     Result<std::string> RoverCService::Forward(const int8_t speed) {
-        Result<std::string> result;
-        const int32_t moderatedSpeed = ModerateSpeed(speed);
-        SpeedCoefficients speedCoefficients;
-        speedCoefficients.forward = 1.0;
-        auto appliedCoefficients = speedCoefficients.GetCoefficientsVector(moderatedSpeed);
-        result = Send_Motors_iic(appliedCoefficients);
+        Result<std::string> result = MoveAtAngle(0, speed);
         return result;
     }
 
     Result<std::string> RoverCService::Backward(const int8_t speed) {
-        Result<std::string> result;
-        const int32_t moderatedSpeed = ModerateSpeed(speed);
-        SpeedCoefficients speedCoefficients;
-        speedCoefficients.backward = 1.0;
-        auto appliedCoefficients = speedCoefficients.GetCoefficientsVector(moderatedSpeed);
-        result = Send_Motors_iic(appliedCoefficients);
+        Result<std::string> result = MoveAtAngle(180, speed);
         return result;
     }
 
     Result<std::string> RoverCService::TurnLeft(const int8_t speed) {
         Result<std::string> result;
-        const int32_t moderatedSpeed = ModerateSpeed(speed);
-        SpeedCoefficients speedCoefficients;
-        speedCoefficients.rotate_left = 1.0;
-        auto appliedCoefficients = speedCoefficients.GetCoefficientsVector(moderatedSpeed);
-        result = Send_Motors_iic(appliedCoefficients);
+        std::valarray<int32_t> motorsSpeed = {ModerateSpeed(speed), ModerateSpeed(speed*-1), ModerateSpeed(speed), ModerateSpeed(speed*-1)};
+        result = Send_Motors_iic(motorsSpeed);
         return result;
     }
 
     Result<std::string> RoverCService::TurnRight(const int8_t speed) {
         Result<std::string> result;
-        const int32_t moderatedSpeed = ModerateSpeed(speed);
-        SpeedCoefficients speedCoefficients;
-        speedCoefficients.rotate_right = 1.0;
-        auto appliedCoefficients = speedCoefficients.GetCoefficientsVector(moderatedSpeed);
-        result = Send_Motors_iic(appliedCoefficients);
+        std::valarray<int32_t> motorsSpeed = {ModerateSpeed(speed*-1), ModerateSpeed(speed), ModerateSpeed(speed*-1), ModerateSpeed(speed)};
+        result = Send_Motors_iic(motorsSpeed);
         return result;
     }
 
     Result<std::string> RoverCService::SlideLeft(const int8_t speed) {
-        Result<std::string> result;
-        const int32_t moderatedSpeed = ModerateSpeed(speed);
-        SpeedCoefficients speedCoefficients;
-        speedCoefficients.left = 1.0;
-        auto appliedCoefficients = speedCoefficients.GetCoefficientsVector(moderatedSpeed);
-        result = Send_Motors_iic(appliedCoefficients);
+        Result<std::string> result = MoveAtAngle(-90, speed);
         return result;
     }
 
     Result<std::string> RoverCService::SlideRight(const int8_t speed) {
-        Result<std::string> result;
-        const int32_t moderatedSpeed = ModerateSpeed(speed);
-        SpeedCoefficients speedCoefficients;
-        speedCoefficients.right = 1.0;
-        auto appliedCoefficients = speedCoefficients.GetCoefficientsVector(moderatedSpeed);
-        result = Send_Motors_iic(appliedCoefficients);
+        Result<std::string> result = MoveAtAngle(90, speed);
         return result;
     }
 
     Result<std::string> RoverCService::Stop() {
         Result<std::string> result;
-        const int32_t moderatedSpeed = ModerateSpeed(0);
-        SpeedCoefficients speedCoefficients; // all coefficients initiliazed to 0, that is stop :)
-        auto appliedCoefficients = speedCoefficients.GetCoefficientsVector(moderatedSpeed);
-        result = Send_Motors_iic(appliedCoefficients);
+        std::valarray<int32_t> motorsSpeed = {0, 0, 0, 0};
+        result = Send_Motors_iic(motorsSpeed);
         return result;
     }
 

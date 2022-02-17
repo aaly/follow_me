@@ -32,13 +32,13 @@ extern "C" void app_main()
 
 
     {    
-        Lib::Timer danceTimer("moveatangle", 16000, [&](){
-            serviceManager.RegisterEvent(Services::Event("rover.dance", ""));
+        Lib::Timer danceTimer("dance", 16000, [&](){
+            serviceManager.RegisterEvent(Services::Event("rover.dance", std::string("{\"angle\": 220, \"speed\": 100}")));
             delay(1000);
         }, false);
         
         if(!danceTimer.Start().Succeded()) {
-            Serial.printf("failed to start moveatangle timer! \n\n\n\n\n");
+            Serial.printf("failed to start dance timer! \n\n\n\n\n");
         }
     }
     

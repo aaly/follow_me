@@ -80,7 +80,14 @@
         "xstddef": "cpp",
         "xtr1common": "cpp",
         "xtree": "cpp",
-        "xutility": "cpp"
+        "xutility": "cpp",
+        "cstdarg": "cpp",
+        "deque": "cpp",
+        "fstream": "cpp",
+        "queue": "cpp",
+        "random": "cpp",
+        "set": "cpp",
+        "strstream": "cpp"
     },
     "idf.portWin": "COM12"
 }
