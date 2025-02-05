@@ -81,7 +81,7 @@ namespace Services {
 
     Result<std::string> BluetoothService::Init(const ParametersPack& config) {
         Result<std::string> result;
-        BLEDevice::init(config.GetParameter<std::string>("name"));
+        BLEDevice::init(config.GetParameter<std::string>("name").c_str());
 
         //Serial.printf("Bluetooth service [%s] set mode to [%s]\n",
         //_name.c_str(), 
@@ -132,13 +132,13 @@ namespace Services {
             auto scan_result = scan->start(10);
             std::vector<Connection> connections_vector;
 
-            for(uint32_t i =0; i < scan_result.getCount(); i++) {
-                auto ble_device = scan_result.getDevice(i);
+            for(uint32_t i =0; i < scan_result->getCount(); i++) {
+                auto ble_device = scan_result->getDevice(i);
 
                 if(device_name.size()) {
-                    if(ble_device.getName() == device_name) {
+                        if (strcmp(ble_device.getName().c_str(), device_name.c_str()) == 0) {
                         Connection ble_connection;
-                        ble_connection.name = ble_device.getName();
+                        ble_connection.name = ble_device.getName().c_str();
                         ble_connection.rssi = ble_device.getRSSI();
                         connections_vector.push_back(ble_connection);
                         break;
@@ -146,7 +146,7 @@ namespace Services {
                 }
                 else {
                     Connection ble_connection;
-                    ble_connection.name = ble_device.getName();
+                    ble_connection.name = ble_device.getName().c_str();
                     ble_connection.rssi = ble_device.getRSSI();
                     connections_vector.push_back(ble_connection);
                 }

@@ -1,5 +1,4 @@
 #include "RoverCService.h"
-#include <cmath>
 namespace Services {
 
     RoverCService::RoverCService(const std::string& name,  Services::ServiceRegistry* service_manager): Service(name, service_manager) {
@@ -23,7 +22,7 @@ namespace Services {
                 }
 
                 int32_t rssi = static_cast<int32_t>(_kalman_filter.CorrectAndGet(parameters.GetParameter<int32_t>("rssi")));
-                Serial.printf("Rover has device [%s] RSSI [%d]\n", parameters.GetParameter<std::string>("name").c_str(), rssi);
+                Serial.printf("Rover has device [%s] RSSI [%ld]\n", parameters.GetParameter<std::string>("name").c_str(), rssi);
                 Emit(Event("display.showtext", std::string("{\"text\":\"RSSI:") + std::to_string(rssi) + "\", \"clear\":true}"));
                 _prev_rssi_delta = abs(_prev_rssi - rssi);
                 _prev_rssi = rssi;
@@ -87,7 +86,7 @@ namespace Services {
     }
 
     int32_t RoverCService::ModerateSpeed(const int32_t& speed) {
-        int32_t result = Clamp(speed, -100, 100);
+        int32_t result = Clamp(speed, static_cast<int32_t>(-100), static_cast<int32_t>(100));
         return result;
     }
 
@@ -99,12 +98,12 @@ namespace Services {
         int32_t x = std::round(moderatedSpeed*std::sin((angle*M_PI)/180));
         int32_t y = std::round(moderatedSpeed*std::cos((angle*M_PI)/180));
         
-        Serial.printf("MoveAtAngle(%d, %d)\n",angle ,moderatedSpeed);
-        Serial.printf("x,y(%d, %d)\n",x ,y);
+        Serial.printf("MoveAtAngle(%ld, %ld)\n",angle ,moderatedSpeed);
+        Serial.printf("x,y(%ld, %ld)\n",x ,y);
 
         std::valarray<int32_t> motorsSpeed = {y+x, y-x, y-x, y+x};
         
-        Serial.printf("motorsSpeed: %d, %d, %d, %d \n", motorsSpeed[0], motorsSpeed[1], motorsSpeed[2], motorsSpeed[3]);
+        Serial.printf("motorsSpeed: %ld, %ld, %ld, %ld \n", motorsSpeed[0], motorsSpeed[1], motorsSpeed[2], motorsSpeed[3]);
         result = Send_Motors_iic(motorsSpeed);
         return result;
     };

@@ -1,7 +1,7 @@
 #ifndef _THREAD_LIB
 #define _THREAD_LIB
 
-#include <FreeRTOS/FreeRTOS.h>
+#include "freertos/FreeRTOS.h"
 
 #include "../common.h"
 #include <string>

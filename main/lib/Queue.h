@@ -1,8 +1,8 @@
 #ifndef _MESSAGEQUEUE_LIB
 #define _MESSAGEQUEUE_LIB
 
-#include <FreeRTOS/FreeRTOS.h>
-#include <freertos/queue.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/queue.h"
 #include "../common.h"
 #include <string>
 

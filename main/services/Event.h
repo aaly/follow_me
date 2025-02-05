@@ -21,8 +21,8 @@ namespace Services {
             template<typename T>
             T GetParameter(const std::string& parameter) const {
                 T result{0};
-                if(_parameters.find(parameter) != _parameters.end()) {
-                    result = _parameters[parameter];
+                if (_parameters.contains(parameter)) {  // Use .contains() for readability
+                    result= _parameters.at(parameter).get<T>();  // Use .at() to avoid implicit insertions
                 }
                 return result;
             };
