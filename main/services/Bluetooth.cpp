@@ -1,10 +1,11 @@
-#include "BluetoothService.h"
+#include "Bluetooth.h"
 
 #include <BLEDevice.h>
 #include <BLEUtils.h>
 #include <BLEScan.h>
 #include <BLEAdvertisedDevice.h>
 #include "../lib/Timer.h"
+#include "utility/In_eSPI.h"
 
 //https://circuitdigest.com/microcontroller-projects/esp32-based-bluetooth-ibeacon
 
@@ -76,12 +77,11 @@ namespace Services {
             }
     };
 
-    BluetoothService::BluetoothService(const std::string& name, Services::ServiceRegistry* service_manager): Service(name, service_manager) {
+    Bluetooth::Bluetooth(const std::string& name, Services::ServiceRegistry* service_manager): Service(name, service_manager) {
     };
 
-    Result<std::string> BluetoothService::Init(const ParametersPack& config) {
-        Result<std::string> result;
-        BLEDevice::init(config.GetParameter<std::string>("name").c_str());
+    void Bluetooth::Init(const ParametersPack& config) {
+         BLEDevice::init(config.GetParameter<std::string>("name").c_str());
 
         //Serial.printf("Bluetooth service [%s] set mode to [%s]\n",
         //_name.c_str(), 
@@ -91,33 +91,30 @@ namespace Services {
             //Dispatch(Event("bluetooth.scanner.scan",""));
         }
 
-
-        On("bluetooth.scanner.scan", [&](const Services::ParametersPack& parameters) {
-            Result<std::string> result;
-            if(parameters.GetParameter<bool>("continuous")) {
-                Dispatch(Event("bluetooth.scanner.scan", parameters.AsString()));
-            }
-
-            Result<std::vector<Connection>> scan_result = 
-            Scan(40, parameters.GetParameter<std::string>("device"));
-
-            if(scan_result.Status() == StatusType::SUCCESS) {
-                for(const auto& connection: scan_result.Data()) {
-                    Serial.printf("Bluetooth service sharing scan result for [%s]\n", connection.name.c_str());
-                    Serial.flush();
-                    Emit(Event("bluetooth.scanner.results", "{\"name\":\"" + connection.name + "\", \"rssi\":" + std::to_string(connection.rssi) + "}"));
-                }
-            }
-            return result;
-        });
-        
-        result.SetStatus(StatusType::SUCCESS);
-        return result;
+        On("bluetooth.scanner.scan", &Bluetooth::handleScan);
     }
 
+    
+    void Bluetooth::handleScan(const Services::ParametersPack& parameters) {
+        if(parameters.GetParameter<bool>("continuous")) {
+            Dispatch(Event("bluetooth.scanner.scan", parameters.AsString()));
+        }
 
-    Result<std::vector<Connection>> BluetoothService::Scan(const uint32_t scanTime, const std::string& device_name) {
+        Result<std::vector<Connection>> scan_result = 
+        Scan(40, parameters.GetParameter<std::string>("device"));
+
+        if(scan_result.Status() == StatusType::SUCCESS) {
+            for(const auto& connection: scan_result.Data()) {
+                Serial.printf("Bluetooth service sharing scan result for [%s]\n", connection.name.c_str());
+                Serial.flush();
+                Emit(Event("bluetooth.scanner.results", "{\"name\":\"" + connection.name + "\", \"rssi\":" + std::to_string(connection.rssi) + "}"));
+            }
+        }
+    }
+
+    Result<std::vector<Connection>> Bluetooth::Scan(const uint32_t scanTime, const std::string& device_name) {
         Result<std::vector<Connection>> result;
+
         BLEScan* scan = BLEDevice::getScan();
         //scan->setAdvertisedDeviceCallbacks(new IBeaconAdvertised(), true);
         scan->setAdvertisedDeviceCallbacks(nullptr);

@@ -34,10 +34,12 @@ namespace Services {
         uint64_t temp = 0;
     };
 
-    class IMUService : public Service {
+    class IMU : public Service {
         public:
-            IMUService(const std::string& name,  Services::ServiceRegistry* service_manager);
-            Result<std::string> Init(const ParametersPack& config) override;
+            IMU(const std::string& name,  Services::ServiceRegistry* service_manager);
+            void Init(const ParametersPack& config) override;
+            void Start(const Services::ParametersPack&);
+            void Stop(const Services::ParametersPack&);
         private:
             std::atomic<bool> m_isCollecting;
             IMUInformation m_IMUInformation;

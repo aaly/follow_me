@@ -6,7 +6,7 @@
 #include <Thread.h>
 #include "Event.h"
 #include <string>
-#include <map>
+#include <unordered_map>
 #include <functional>
 #include <M5StickCPlus.h>
 namespace Services {
@@ -22,9 +22,16 @@ namespace Services {
             /**
              * @brief Initilization of the service
              * @param config parameters for the service
-             * @return Result with a status string in case of error
+             * @return None
              */
-            virtual Result<std::string> Init(const ParametersPack& config) = 0;
+            virtual void Init(const ParametersPack& config) = 0;
+
+            /**
+             * @brief Shutdown the service
+             * @param config parameters for the service
+             * @return None
+             */
+            void Shutdown(const Services::ParametersPack& parameters);
 
             /**
              * @brief Dispatch event to the event queue
@@ -61,8 +68,25 @@ namespace Services {
 
             /**
              * @brief subscribe to events and define how to handle them
-             */
-            Result<std::string> On(const std::string& event_name, std::function<Result<std::string>(const Services::ParametersPack&)> handler);
+             */            
+            template <typename T>
+            void On(const std::string& event_name, void (T::*handler)(const ParametersPack&)){
+                if(_event_handlers.count(event_name)) {
+                    //TODO emit error
+                    Serial.printf("event handler for EVENT is already registered\n");
+                    return;
+                }
+
+                auto result = Subscribe(event_name);
+                if (!result.Succeded()) {
+                    //TODO emit error
+                    Serial.printf("failed to subscribe to event EVENT\n");
+                    return;
+                }
+                _event_handlers[event_name] = [this, handler](const ParametersPack& params) -> void {
+                    return (static_cast<T*>(this)->*handler)(params);  
+                };  
+            }
 
         protected:
             std::string _name;
@@ -70,7 +94,7 @@ namespace Services {
             Lib::Queue<Event> _events;
             ServiceRegistry* _service_manager = nullptr;
             Lib::Thread _ev_loop_thread;
-            std::map<std::string, std::function<Result<std::string>(const Services::ParametersPack&)>> _event_handlers;
+            std::unordered_map<std::string, std::function<void(const Services::ParametersPack&)>> _event_handlers;
 
             bool _keepRunning = true;
     };

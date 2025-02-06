@@ -14,31 +14,32 @@ namespace Services {
         return std::max<T>(lower, std::min<T>(n, upper));
     };
 
-    class RoverCService : public Service {
+    class RoverC : public Service {
         public:
-            RoverCService(const std::string& name,  Services::ServiceRegistry* service_manager);
-            Result<std::string> Init(const ParametersPack& config) override;
+            RoverC(const std::string& name,  Services::ServiceRegistry* service_manager);
+            void Init(const ParametersPack& config) override;
 
-            Result<std::string> Forward(int8_t Speed);
-            Result<std::string> Backward(int8_t Speed);
+            void Forward(int8_t Speed);
+            void Backward(int8_t Speed);
             Result<std::string> TurnLeft(int8_t Speed);
             Result<std::string> TurnRight(int8_t Speed);
-            Result<std::string> SlideLeft(int8_t Speed);
-            Result<std::string> SlideRight(int8_t Speed);
-            Result<std::string> Stop();
+            void SlideLeft(int8_t Speed);
+            void SlideRight(int8_t Speed);
+            void Stop(const Services::ParametersPack& parameters);
             Result<std::string> Send_iic(uint8_t Register, uint8_t Speed);
             Result<std::string> Send_Motors_iic(const std::valarray<int32_t>& motors_values);
             Result<std::string> SetServoAngle(uint8_t Servo_ch, uint8_t degree);
             Result<std::string> Servo_pulse(uint8_t Servo_ch, uint16_t width);
-            Result<std::string> Dance();
-            Result<std::string> Follow(const std::string& master);
+            void Dance(const Services::ParametersPack& parameters);
+            void Follow(const Services::ParametersPack& parameters);
+            void UpdateMasterDistance(const Services::ParametersPack& parameters);
 
             /*
             * @brief move the rover at a specific angle with the specified moderated speed
             * @param angle with 0 pointing forward/north, 90 right, -90 left,  180 or -180 backward/south
             * @param speed between 0 and 100
             */
-            Result<std::string> MoveAtAngle(const int32_t& angle, const int32_t& speed = 100);
+            void MoveAtAngle(const Services::ParametersPack& parameters);
 
             /*
             * @brief speed must be in range [0,100]

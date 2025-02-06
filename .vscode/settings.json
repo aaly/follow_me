@@ -89,5 +89,9 @@
         "set": "cpp",
         "strstream": "cpp"
     },
-    "idf.portWin": "COM12"
+    "idf.portWin": "COM12",
+    "idf.flashType": "UART",
+    "idf.port": "/dev/ttyACM0",
+    "idf.flashBaudRate": "115200"
+
 }

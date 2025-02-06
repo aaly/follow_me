@@ -1,8 +1,8 @@
 #include "services/ServiceManager.h"
-#include "services/BluetoothService.h"
-#include "services/DisplayService.h"
-#include "services/RoverCService.h"
-#include "services/IMUService.h"
+#include "services/Bluetooth.h"
+#include "services/Display.h"
+#include "services/RoverC.h"
+#include "services/IMU.h"
 #include <M5StickCPlus.h>
 #include "lib/Timer.h"
 #include "services/Event.h"
@@ -13,10 +13,10 @@ extern "C" void app_main()
     Serial.begin(115200);
     
     Services::ServiceRegistry& serviceManager = Services::ServiceRegistry::GetInstance();
-    serviceManager.RegisterService<Services::BluetoothService>("bluetooth scanner", "{\"mode\":\"scanner\"}");
-    serviceManager.RegisterService<Services::DisplayService>("display", "");
+    serviceManager.RegisterService<Services::Bluetooth>("bluetooth scanner", "{\"mode\":\"scanner\"}");
+    serviceManager.RegisterService<Services::Display>("display", "");
     //serviceManager.RegisterService<Services::IMUService>("imu", "");
-    serviceManager.RegisterService<Services::RoverCService>("rover", "");
+    serviceManager.RegisterService<Services::RoverC>("rover", "");
 
     // {
     //     Lib::Timer bluetoothTimer("bluetoothTimer", 5000, [&](){
