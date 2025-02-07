@@ -8,7 +8,7 @@
 #include <string>
 #include <unordered_map>
 #include <functional>
-#include <M5StickCPlus.h>
+#include <M5Unified.hpp>
 namespace Services {
     class ServiceRegistry;
     class Service {
@@ -80,7 +80,7 @@ namespace Services {
                 auto result = Subscribe(event_name);
                 if (!result.Succeded()) {
                     //TODO emit error
-                    Serial.printf("failed to subscribe to event EVENT\n");
+                    Serial.printf("failed to subscribe to event %s with error %s\n", event_name.c_str(), result.Data().c_str());
                     return;
                 }
                 _event_handlers[event_name] = [this, handler](const ParametersPack& params) -> void {

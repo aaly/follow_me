@@ -7,7 +7,7 @@ namespace Services {
 
     void IMU::Init(const ParametersPack& config) {
         m_isCollecting.store(false);
-        if (M5.Imu.Init() == 0) {
+        if (M5.Imu.init() == 0) {
             On("imu.start", &IMU::Start);
             On("imu.stop", &IMU::Stop);
         }
@@ -22,10 +22,10 @@ namespace Services {
             m_isCollecting.store(true);
             Lib::Timer dataTimer = Lib::Timer("dataTimer", parameters.GetParameter<uint32_t>("interval"), [this](){
                 IMUData data;
-                M5.IMU.getGyroData(&data.gyroX, &data.gyroY, &data.gyroZ);
-                M5.IMU.getAccelData(&data.accX, &data.accY, &data.accZ);
-                M5.IMU.getAhrsData(&data.pitch, &data.roll, &data.yaw);
-                M5.IMU.getTempData(&data.temp);
+                M5.Imu.getGyroData(&data.gyroX, &data.gyroY, &data.gyroZ);
+                M5.Imu.getAccelData(&data.accX, &data.accY, &data.accZ);
+                //M5.Imu.getAhrsData(&data.pitch, &data.roll, &data.yaw);
+                //M5.Imu.getTempData(&data.temp);
                 ProcessData(data);
             }, false);
             

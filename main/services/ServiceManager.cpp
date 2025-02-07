@@ -1,6 +1,6 @@
 #include "ServiceManager.h"
 #include "Service.h"
-#include <M5StickCPlus.h>
+#include <M5Unified.hpp>
 #include "Service.h"
 namespace Services {
     ServiceRegistry& ServiceRegistry::GetInstance()
@@ -14,21 +14,7 @@ namespace Services {
 
 
     Result<std::string> ServiceRegistry::RegisterEvent(const Services::Event& event) {
-
-        Result<std::string> result = _events.Send(event);
-
-        if(!result.Succeded()) {
-            Serial.printf("[ERROR] sending events! abortin!\n");
-            Serial.flush();
-            abort();
-        }
-        else {
-            //TODO investigate why flush here would panic
-            //Serial.printf("Regestering event %s\n\n\n\n\n", event.Name().c_str());
-            //Serial.flush();
-        }
-        
-        return result;
+        return _events.Send(event);
     };
 
     void ServiceRegistry::Run() {

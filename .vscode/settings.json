@@ -92,6 +92,6 @@
     "idf.portWin": "COM12",
     "idf.flashType": "UART",
     "idf.port": "/dev/ttyACM0",
-    "idf.flashBaudRate": "115200"
-
+    "idf.flashBaudRate": "115200",
+    "idf.monitorBaudRate": "115200"
 }

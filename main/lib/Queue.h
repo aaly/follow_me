@@ -54,10 +54,10 @@ namespace Lib {
                 Result<std::string> result;
                 auto send_result = xQueueSend(_queue, &message, static_cast<TickType_t>(wait));
                 if(pdTRUE == send_result) {
-                    result.Success("Success to send message to queue");
+                    result.Success("");
                 }
                 else {
-                    result.Failure("Failure to send message to queue");
+                    result.Failure("");
                 }
                 return result;
             };
